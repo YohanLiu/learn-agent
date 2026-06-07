@@ -420,12 +420,14 @@ source = { editable = "." }
 dependencies = [
     { name = "langchain" },
     { name = "langchain-deepseek" },
+    { name = "langchain-openai" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "langchain", specifier = ">=1.3.2" },
     { name = "langchain-deepseek", specifier = ">=1.0.1" },
+    { name = "langchain-openai", specifier = ">=1.2.2" },
 ]
 
 [[package]]
