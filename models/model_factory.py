@@ -60,7 +60,6 @@ class ModelFactory:
         Returns:
             ChatOpenAI 实例
         """
-        self._env_loader.load("YUNWU_API_KEY", "YUNWU_BASE_URL")
         return ChatOpenAI(
             model=model,
             api_key=self._env_loader.get("YUNWU_API_KEY"),
@@ -88,7 +87,6 @@ class ModelFactory:
         Returns:
             ChatOpenAI 实例
         """
-        self._env_loader.load("DASHSCOPE_API_KEY", "DASHSCOPE_BASE_URL")
         return ChatOpenAI(
             model=model,
             api_key=self._env_loader.get("DASHSCOPE_API_KEY"),

@@ -5,6 +5,15 @@ import subprocess
 class EnvLoader:
     """从 .zshrc 文件加载环境变量到当前进程，支持按需加载和缓存。"""
 
+    DEFAULT_VAR_NAMES = [
+        "MODELSCOPE_API_KEY",
+        "MODELSCOPE_BASE_URL",
+        "YUNWU_API_KEY",
+        "YUNWU_BASE_URL",
+        "DASHSCOPE_API_KEY",
+        "DASHSCOPE_BASE_URL",
+    ]
+
     def __init__(self, zshrc_path: str = "~/.zshrc"):
         self._zshrc_path = zshrc_path
         self._cache: dict[str, str] = {}
@@ -14,7 +23,7 @@ class EnvLoader:
         加载指定的环境变量。
 
         Args:
-            *var_names: 要加载的环境变量名，如 "DEEPSEEK_API_KEY", "DEEPSEEK_BASE_URL"
+            *var_names: 要加载的环境变量名，如 "MODELSCOPE_API_KEY", "YUNWU_BASE_URL"
 
         Returns:
             包含已成功加载的环境变量字典
@@ -31,7 +40,7 @@ class EnvLoader:
 
     def load_all(self, var_names: list[str] | None = None) -> dict[str, str]:
         """
-        批量加载环境变量。如果不传 var_names，则加载默认的 DeepSeek 相关变量。
+        批量加载环境变量。如果不传 var_names，则加载 DEFAULT_VAR_NAMES 中的全部变量。
 
         Args:
             var_names: 要加载的环境变量名列表，为 None 时使用默认列表
@@ -40,7 +49,7 @@ class EnvLoader:
             包含已成功加载的环境变量字典
         """
         if var_names is None:
-            var_names = ["DEEPSEEK_API_KEY", "DEEPSEEK_BASE_URL"]
+            var_names = self.DEFAULT_VAR_NAMES
         return self.load(*var_names)
 
     def get(self, name: str) -> str | None:
