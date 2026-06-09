@@ -15,7 +15,7 @@ from typing_extensions import TypedDict, Literal
 from langgraph.graph import StateGraph, START, END
 
 from models.model_factory import ModelFactory
-from examples.graph_utils import GraphVisualizer
+from utils.graph_utils import GraphVisualizer
 
 
 # ── 评估 Schema ───────────────────────────────────────────────────────────────

@@ -1,50 +1,16 @@
 # Step 1: Define tools and model
 
-from langchain.tools import tool
 from models.model_factory import ModelFactory
+from tools.math import ARITHMETIC_TOOLS
 
 
 factory = ModelFactory()
 model = factory.create_modelscope_chat_model()
 
 
-# Define tools
-@tool
-def multiply(a: int, b: int) -> int:
-    """Multiply `a` and `b`.
-
-    Args:
-        a: First int
-        b: Second int
-    """
-    return a * b
-
-
-@tool
-def add(a: int, b: int) -> int:
-    """Adds `a` and `b`.
-
-    Args:
-        a: First int
-        b: Second int
-    """
-    return a + b
-
-
-@tool
-def divide(a: int, b: int) -> float:
-    """Divide `a` and `b`.
-
-    Args:
-        a: First int
-        b: Second int
-    """
-    return a / b
-
-
 # Augment the LLM with tools
-tools = [add, multiply, divide]
-tools_by_name = {tool.name: tool for tool in tools}
+tools = ARITHMETIC_TOOLS
+tools_by_name = {t.name: t for t in tools}
 model_with_tools = model.bind_tools(tools)
 
 # Step 2: Define state
@@ -139,7 +105,7 @@ agent = agent_builder.compile()
 
 from pathlib import Path
 
-from examples.graph_utils import GraphVisualizer
+from utils.graph_utils import GraphVisualizer
 
 _graph_viz = GraphVisualizer()
 

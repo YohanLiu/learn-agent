@@ -4,14 +4,13 @@
 https://docs.langchain.com/oss/python/langgraph/workflows-agents#agents
 https://docs.langchain.com/oss/python/langgraph/workflows-agents#toolnode
 
-Graph API 版本已实现于 examples/langgraphAgent.py，本文件补充：
+Graph API 版本已实现于 examples/agents/langgraphAgent.py，本文件补充：
   ToolNode 预构建节点的用法。
 """
 
 from pathlib import Path
 from typing import Any
 
-from langchain.tools import tool
 from langchain.messages import (
     HumanMessage,
     SystemMessage,
@@ -20,46 +19,8 @@ from langgraph.graph import MessagesState, StateGraph, START, END
 from langgraph.prebuilt import ToolNode
 
 from models.model_factory import ModelFactory
-from examples.graph_utils import GraphVisualizer
-
-
-# ── 工具定义 ───────────────────────────────────────────────────────────────────
-
-@tool
-def multiply(a: int, b: int) -> int:
-    """将 `a` 和 `b` 相乘。
-
-    Args:
-        a: 第一个整数
-        b: 第二个整数
-    """
-    return a * b
-
-
-@tool
-def add(a: int, b: int) -> int:
-    """将 `a` 和 `b` 相加。
-
-    Args:
-        a: 第一个整数
-        b: 第二个整数
-    """
-    return a + b
-
-
-@tool
-def divide(a: int, b: int) -> float:
-    """将 `a` 除以 `b`。
-
-    Args:
-        a: 第一个整数
-        b: 第二个整数
-    """
-    return a / b
-
-
-_ARITHMETIC_TOOLS = [add, multiply, divide]
-_TOOLS_BY_NAME = {t.name: t for t in _ARITHMETIC_TOOLS}
+from tools.math import ARITHMETIC_TOOLS
+from utils.graph_utils import GraphVisualizer
 
 
 # ── ToolNode 预构建节点版本 ────────────────────────────────────────────────────
@@ -73,7 +34,7 @@ class AgentWithToolNode:
     def __init__(self, model_factory: ModelFactory | None = None):
         self._factory = model_factory or ModelFactory()
         self.llm = self._factory.create_dashscope_chat_model()
-        self._tools = _ARITHMETIC_TOOLS
+        self._tools = ARITHMETIC_TOOLS
         self._llm_with_tools = self.llm.bind_tools(self._tools)
         self._workflow = self._build()
 

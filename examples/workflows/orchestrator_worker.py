@@ -19,7 +19,7 @@ from langgraph.graph import StateGraph, START, END
 from langgraph.types import Send
 
 from models.model_factory import ModelFactory
-from examples.graph_utils import GraphVisualizer
+from utils.graph_utils import GraphVisualizer
 
 
 # ── 共享 Schema ───────────────────────────────────────────────────────────────

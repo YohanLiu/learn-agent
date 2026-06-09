@@ -204,7 +204,7 @@ from pathlib import Path
 
 from langgraph.checkpoint.memory import MemorySaver
 
-from examples.graph_utils import GraphVisualizer
+from utils.graph_utils import GraphVisualizer
 
 _graph_viz = GraphVisualizer()
 

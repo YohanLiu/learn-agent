@@ -6,7 +6,7 @@ IPython 环境内联显示，否则保存为 PNG 文件。
 
 from pathlib import Path
 
-GRAPH_OUTPUT_DIR = Path(__file__).resolve().parent / "output" / "graphs"
+GRAPH_OUTPUT_DIR = Path(__file__).resolve().parent.parent / "examples" / "output" / "graphs"
 
 
 def _in_ipython() -> bool:
