@@ -33,7 +33,7 @@ from langchain.messages import HumanMessage
 from models.model_factory import ModelFactory
 
 factory = ModelFactory()
-llm = factory.create_yunwu_chat_model()
+llm = factory.create_dashscope_chat_model()
 
 
 
@@ -48,11 +48,13 @@ def classify_intent(state: EmailAgentState) -> Command[Literal["search_documenta
     """Use LLM to classify email intent and urgency, then route accordingly"""
 
     # Create structured LLM that returns EmailClassification dict
+    # qwen 的模型结构化输出参考文档:https://help.aliyun.com/zh/model-studio/qwen-structured-output?spm=a2ty02.42736056.0.0.379774a1qUlvcT&scm=20140722.S_help@@%E6%96%87%E6%A1%A3@@2862209@@61.S_llmOS0.ID_95211-RL_%E7%BB%93%E6%9E%84%E5%8C%96%E8%BE%93%E5%87%BA%E5%B9%B6%E6%B2%A1%E6%9C%89%E6%8C%89%E7%85%A7%E6%88%91%E7%9A%84%E9%A2%84%E6%9C%9F%E8%BF%9B%E8%A1%8C%E8%BE%93%E5%87%BA-LOC_chat~DAS~llm-OR_ser-PAR1_0be37d3f17810010489491053d0a6c-V_4-P0_0-P1_0
+    # 找客服说还要关闭深度思考才可以,麻烦,不如用gpt的模型省事了
     structured_llm = llm.with_structured_output(EmailClassification)
 
     # Format the prompt on-demand, not stored in state
     classification_prompt = f"""
-    Analyze this customer email and classify it:
+    Analyze this customer email and classify it, return the result as a json object:
 
     Email: {state['email_content']}
     From: {state['sender_email']}

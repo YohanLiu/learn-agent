@@ -79,7 +79,7 @@ loader.load_all()  # 加载 DEEPSEEK_API_KEY 和 DEEPSEEK_BASE_URL
 from models.model_factory import ModelFactory
 
 factory = ModelFactory()
-model = factory.create_chat_model()  # 默认使用 DeepSeek-V4-Flash
+model = factory.create_modelscope_chat_model()  # 默认使用 DeepSeek-V4-Flash
 ```
 
 ### Tools

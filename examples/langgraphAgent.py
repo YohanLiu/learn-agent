@@ -5,7 +5,7 @@ from models.model_factory import ModelFactory
 
 
 factory = ModelFactory()
-model = factory.create_chat_model()
+model = factory.create_modelscope_chat_model()
 
 
 # Define tools

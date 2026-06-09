@@ -3,7 +3,7 @@ from tools.weather import get_weather
 
 # 创建模型
 factory = ModelFactory()
-model = factory.create_chat_model()
+model = factory.create_modelscope_chat_model()
 
 # Bind (potentially multiple) tools to the model
 model_with_tools = model.bind_tools([get_weather])
