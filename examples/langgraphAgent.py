@@ -139,32 +139,14 @@ agent = agent_builder.compile()
 
 from pathlib import Path
 
-GRAPH_OUTPUT_DIR = Path(__file__).resolve().parent / "output" / "graphs"
+from examples.graph_utils import GraphVisualizer
 
-
-def _in_ipython() -> bool:
-    try:
-        from IPython import get_ipython
-
-        return get_ipython() is not None
-    except ImportError:
-        return False
+_graph_viz = GraphVisualizer()
 
 
 def show_agent_graph(compiled_agent, state_class: type) -> Path | None:
     """In IPython: inline display; otherwise save PNG named after state_class."""
-    png = compiled_agent.get_graph(xray=True).draw_mermaid_png()
-    if _in_ipython():
-        from IPython.display import Image, display
-
-        display(Image(png))
-        return None
-
-    GRAPH_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    path = GRAPH_OUTPUT_DIR / f"{state_class.__name__}.png"
-    path.write_bytes(png)
-    print(f"Graph saved to {path}")
-    return path
+    return _graph_viz.show(compiled_agent, state_class.__name__, xray=True)
 
 
 show_agent_graph(agent, MessagesState)
