@@ -1,0 +1,9 @@
+{
+  "store": {
+    "index": {
+      "embed": "openai:text-embeddings-3-small",
+      "dims": 1536,
+      "fields": ["$"]
+    }
+  }
+}
