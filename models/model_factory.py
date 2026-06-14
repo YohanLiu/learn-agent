@@ -1,5 +1,5 @@
 from langchain_deepseek import ChatDeepSeek
-from langchain_openai import ChatOpenAI
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from config.env_loader import EnvLoader
 
 
@@ -9,6 +9,7 @@ class ModelFactory:
     DEFAULT_MODELSCOPE_MODEL = "deepseek-ai/DeepSeek-V4-Flash"
     DEFAULT_YUNWU_MODEL = "gpt-5.4-nano:floor"
     DEFAULT_DASHSCOPE_MODEL = "qwen3.7-plus"
+    DEFAULT_EMBEDDING_MODEL = "Qwen/Qwen3-Embedding-8B"
 
     def __init__(self, env_loader: EnvLoader | None = None):
         """
@@ -92,5 +93,27 @@ class ModelFactory:
             api_key=self._env_loader.get("DASHSCOPE_API_KEY"),
             base_url=self._env_loader.get("DASHSCOPE_BASE_URL"),
             extra_body={"enable_thinking": enable_thinking},
+            **kwargs,
+        )
+
+    def create_embedding_model(
+        self,
+        model: str = DEFAULT_EMBEDDING_MODEL,
+        **kwargs,
+    ) -> OpenAIEmbeddings:
+        """
+        创建 OpenAI 兼容的 Embedding 模型实例。
+
+        Args:
+            model: embedding 模型名称，默认使用 text-embedding-3-small。
+            **kwargs: 传递给 OpenAIEmbeddings 的额外参数。
+
+        Returns:
+            OpenAIEmbeddings 实例
+        """
+        return OpenAIEmbeddings(
+            model=model,
+            api_key=self._env_loader.get("MODELSCOPE_API_KEY"),
+            base_url=self._env_loader.get("MODELSCOPE_BASE_URL"),
             **kwargs,
         )

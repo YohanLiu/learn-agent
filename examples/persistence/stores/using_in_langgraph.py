@@ -37,12 +37,15 @@ def _last_message_content(messages: list) -> str:
     return last.content
 
 
+# ... existing code ...
 async def update_memory(state: MessagesState, runtime: Runtime[Context]) -> dict[str, Any]:
     user_id = runtime.context.user_id
     namespace = (user_id, "memories")
     memory_id = str(uuid.uuid4())
     memory = f"User said: {_last_message_content(state['messages'])}"
+    print(f"[DEBUG update_memory] Saving: {memory}")
     await runtime.store.aput(namespace, memory_id, {"memory": memory})
+    print(f"[DEBUG update_memory] Saved with ID: {memory_id}")
     return {}
 
 
@@ -51,11 +54,20 @@ async def call_model(state: MessagesState, runtime: Runtime[Context]) -> dict[st
     namespace = (user_id, "memories")
 
     query = _last_message_content(state["messages"])
+    print(f"[DEBUG call_model] Query: '{query}'")
     memories = await runtime.store.asearch(namespace, query=query, limit=3)
+    print(f"[DEBUG call_model] Found {len(memories)} memories")
+    for i, m in enumerate(memories):
+        print(f"  [{i}] {m.value['memory']}")
+
     info = "\n".join(d.value["memory"] for d in memories)
 
     reply = f"Known memories:\n{info}" if info else "No memories yet."
+    print(f"[DEBUG call_model] Reply: {reply}")
     return {"messages": [AIMessage(content=reply)]}
+
+
+# ... existing code ...
 
 
 def build_graph():
@@ -92,8 +104,13 @@ class StoreLangGraphDemo:
             print(update)
 
     async def run(self) -> None:
-        await self.stream_thread("1", "hi")
-        await self.stream_thread("2", "hi, tell me about my memories")
+        # 不同的 user_id 不可以访问相同的记忆
+        await self.stream_thread("1", "hi-1", "1")
+        await self.stream_thread("2", "hi-2, tell me about my memories", "2")
+
+        # 如果你创建了一个新线程，只要 user_id 相同，你仍然可以访问相同的记忆
+        await self.stream_thread("3", "hi-3", )
+        await self.stream_thread("4", "hi-4, tell me about my memories",)
 
 
 if __name__ == "__main__":
