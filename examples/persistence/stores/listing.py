@@ -31,6 +31,8 @@ class StoreListingDemo:
     def list_namespace(self) -> None:
         items = self.store.search(("alice", "memories"), limit=100)
         print(f"('alice', 'memories') 共 {len(items)} 条")
+        items = self.store.search(("alice", "preferences"), limit=100)
+        print(f"('alice', 'preferences') 共 {len(items)} 条")
 
     def paginate(self) -> None:
         page_size = 2

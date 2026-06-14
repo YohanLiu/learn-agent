@@ -66,33 +66,9 @@ class EncryptionDemo:
         print(f"加密 checkpointer 运行成功: {graph.get_state(config).values}")
 
 
-def _show_production_snippets() -> None:
-    print("\n--- SqliteSaver（需 langgraph-checkpoint-sqlite）---")
-    print("""
-import sqlite3
-from langgraph.checkpoint.serde.encrypted import EncryptedSerializer
-from langgraph.checkpoint.sqlite import SqliteSaver
-
-serde = EncryptedSerializer.from_pycryptodome_aes()
-checkpointer = SqliteSaver(sqlite3.connect("checkpoint.db"), serde=serde)
-""")
-
-    print("--- PostgresSaver（需 langgraph-checkpoint-postgres）---")
-    print("""
-from langgraph.checkpoint.serde.encrypted import EncryptedSerializer
-from langgraph.checkpoint.postgres import PostgresSaver
-
-serde = EncryptedSerializer.from_pycryptodome_aes()
-checkpointer = PostgresSaver.from_conn_string("postgresql://...", serde=serde)
-checkpointer.setup()
-""")
-
-
 if __name__ == "__main__":
     print("=== Pickle fallback ===")
     PickleFallbackDemo().run()
 
     print("\n=== Encryption ===")
     EncryptionDemo().run()
-
-    _show_production_snippets()
