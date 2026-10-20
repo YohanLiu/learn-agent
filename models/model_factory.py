@@ -45,7 +45,7 @@ class ModelFactory:
             **kwargs,
         )
 
-    # https://www.yunwuai.cc/console
+    # https://www.yw123.cc/console
     def create_yunwu_chat_model(
         self,
         model: str = DEFAULT_YUNWU_MODEL,
