@@ -1,5 +1,10 @@
 """
-演示：system / user / assistant 是 special tokens，不是字符串标签。
+演示：system / user / assistant 是 special tokens（模型训练时学到的角色标记），而不是普通字符串标签。
+
+通过 5 组对照实验说明一个核心结论：
+- base（预训练）模型只会「续写文本」，不认识手写的 system:/user: 这类纯文本标签；
+- instruct（指令微调）模型认得 chat template 渲染出的 special tokens，会进入问答模式；
+- 只有走 apply_chat_template 生成正确的角色标记，system 指令才会生效（并拥有最高优先级）。
 
 运行前（在项目根目录）：
     uv sync
@@ -10,6 +15,16 @@
 """
 
 from __future__ import annotations
+
+import os
+
+# 必须在 import transformers / huggingface_hub 之前设置：huggingface_hub 在导入时
+# 就会读取这些环境变量，之后再改不生效。
+# - HF_ENDPOINT：直连 huggingface.co 在国内会连接超时，改走国内镜像；
+#   用 setdefault 是为了不覆盖用户在 shell / PyCharm 里手动指定的值。
+os.environ.setdefault("HF_ENDPOINT", "https://hf-mirror.com")
+# - HF_HUB_DISABLE_XET：镜像站不代理 Xet 存储协议，不禁用会导致大文件下载失败。
+os.environ.setdefault("HF_HUB_DISABLE_XET", "1")
 
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -44,6 +59,7 @@ PRIORITY_MESSAGES = [
 
 
 def pick_device() -> str:
+    """自动选择推理设备：优先 GPU(cuda) > Mac 加速(mps) > CPU。"""
     if torch.cuda.is_available():
         return "cuda"
     if torch.backends.mps.is_available():
@@ -52,6 +68,7 @@ def pick_device() -> str:
 
 
 def load_model(model_id: str, device: str):
+    """加载指定模型的 tokenizer 与权重，并把模型搬到目标设备、切到评估模式。"""
     tokenizer = AutoTokenizer.from_pretrained(model_id)
     model = AutoModelForCausalLM.from_pretrained(model_id)
     model.to(device)
@@ -60,6 +77,10 @@ def load_model(model_id: str, device: str):
 
 
 def render_chat_prompt(tokenizer, messages: list[dict[str, str]]) -> str:
+    """用模型自带的 chat template 把消息列表渲染成正确的 Prompt（含 special tokens）。
+
+    add_generation_prompt=True 会在末尾补上 assistant 起始标记，引导模型续写回复。
+    """
     return tokenizer.apply_chat_template(
         messages,
         tokenize=False,
@@ -74,6 +95,7 @@ def generate(
     device: str,
     max_new_tokens: int = 60,
 ) -> str:
+    """对给定 prompt 做一次贪心解码（do_sample=False 保证结果可复现），返回新增的回复文本。"""
     inputs = tokenizer(prompt, return_tensors="pt").to(device)
     with torch.no_grad():
         output_ids = model.generate(
@@ -83,11 +105,13 @@ def generate(
             pad_token_id=tokenizer.eos_token_id,
         )
 
+    # 切掉输入部分，只保留模型新生成的 token，再解码成可读文本
     new_tokens = output_ids[0, inputs["input_ids"].shape[-1] :]
     return tokenizer.decode(new_tokens, skip_special_tokens=True).strip()
 
 
 def print_section(title: str, prompt: str, completion: str) -> None:
+    """统一格式化输出：分隔线 + 标题 + 输入 prompt + 模型回复，便于逐实验对比。"""
     print("=" * 72)
     print(title)
     print("-" * 72)
