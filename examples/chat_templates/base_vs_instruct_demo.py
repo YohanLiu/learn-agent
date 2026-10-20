@@ -12,6 +12,10 @@
     uv run python examples/chat_templates/base_vs_instruct_demo.py
 
 首次运行会从 Hugging Face 下载两个 Qwen2.5-0.5B 模型（base + instruct，各约 1GB）。
+
+规模选择：默认 0.5B。经 0.5B / 1.5B 实测对比，0.5B 更贴合本示例的教学目标
+（实验 3 正确答出「巴黎」，而 1.5B 会答成「罗马」反而误导）。如需对比其它规模：
+    MODEL_SIZE=1.5 uv run python examples/chat_templates/base_vs_instruct_demo.py
 """
 
 from __future__ import annotations
@@ -29,9 +33,11 @@ os.environ.setdefault("HF_HUB_DISABLE_XET", "1")
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-# 同一系列的 base / instruct，对比最直观（各约 1GB）
-BASE_MODEL = "Qwen/Qwen2.5-0.5B"
-INSTRUCT_MODEL = "Qwen/Qwen2.5-0.5B-Instruct"
+# 同一系列的 base / instruct，对比最直观
+# 可通过环境变量 MODEL_SIZE 在 0.5 / 1.5 间切换，默认 0.5
+MODEL_SIZE = os.environ.get("MODEL_SIZE", "0.5")
+BASE_MODEL = f"Qwen/Qwen2.5-{MODEL_SIZE}B"
+INSTRUCT_MODEL = f"Qwen/Qwen2.5-{MODEL_SIZE}B-Instruct"
 
 # 实验 1~4：对比「假标签」vs「真 chat template」
 SYSTEM_PROMPT = "你是一个助手。无论用户问什么，你只回答两个字：收到。"
@@ -69,8 +75,10 @@ def pick_device() -> str:
 
 def load_model(model_id: str, device: str):
     """加载指定模型的 tokenizer 与权重，并把模型搬到目标设备、切到评估模式。"""
+    print(f"  → 正在加载: {model_id}")
     tokenizer = AutoTokenizer.from_pretrained(model_id)
-    model = AutoModelForCausalLM.from_pretrained(model_id)
+    # M1 上 1.5B 双模型同时加载时，float32 会 OOM；显式用 float16 走硬件原生加速、减半内存
+    model = AutoModelForCausalLM.from_pretrained(model_id, dtype=torch.float16)
     model.to(device)
     model.eval()
     return tokenizer, model
@@ -125,7 +133,10 @@ def print_section(title: str, prompt: str, completion: str) -> None:
 
 def main() -> None:
     device = pick_device()
-    print(f"使用设备: {device}\n")
+    print(f"使用设备: {device}")
+    print(f"本次模型规模: Qwen2.5-{MODEL_SIZE}B（由环境变量 MODEL_SIZE 控制，默认 0.5）")
+    print(f"  base    模型: {BASE_MODEL}")
+    print(f"  instruct模型: {INSTRUCT_MODEL}\n")
 
     print("加载 base 模型...")
     base_tokenizer, base_model = load_model(BASE_MODEL, device)

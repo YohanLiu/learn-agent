@@ -31,7 +31,8 @@
 
 ```python
 tokenizer = AutoTokenizer.from_pretrained(model_id)
-model = AutoModelForCausalLM.from_pretrained(model_id)
+# 显式用 float16：Apple Silicon（MPS）对 bfloat16 仅软件模拟，float16 走硬件原生加速、省一半内存
+model = AutoModelForCausalLM.from_pretrained(model_id, dtype=torch.float16)
 ```
 
 `model_id` 传入 `"Qwen/Qwen2.5-0.5B"` 这类字符串时，`from_pretrained` 会：
@@ -203,6 +204,29 @@ user 问的是「1+1」，正常应回答 `2`；但 system 要求「只回答收
 
 > 注：0.5B 小模型对较弱的 system 措辞不一定服从；实验 5 使用了明确的「最高优先级规则」措辞，以确保演示效果稳定。
 
+## 规模对比：0.5B vs 1.5B
+
+脚本支持通过环境变量 `MODEL_SIZE` 在 0.5 / 1.5 间切换（默认 0.5）：
+
+```bash
+# 用 1.5B 对照跑一遍
+MODEL_SIZE=1.5 uv run python examples/chat_templates/base_vs_instruct_demo.py
+```
+
+本机（M1，float16）实测两组输出对照：
+
+| 实验 | 教学目标 | 0.5B | 1.5B | 更贴合 |
+|------|----------|------|------|--------|
+| 1 base+假标签 | 乱续写多轮对话 | 续写「电影/音乐」等多轮假对话，无视 system | 每轮都回「收到」，像在服从 system，迷惑 | 0.5 |
+| 2 base+普通问题 | 当文本续写、易幻觉 | 「巴黎位于法国南部靠地中海」——典型幻觉 | 「1.巴黎的首都是巴黎 2.…」——重复循环，非幻觉 | 0.5 |
+| 3 instruct+正确模板 | 进入问答模式、答对 | 「巴黎」✅ 正确 | 「罗马」❌ 事实错误 | 0.5 |
+| 4 instruct+假标签 | 与实验3对比 | 「布鲁塞尔」，体现假标签失效 | 退回续写假对话 | 都好 |
+| 5 system 优先级 | 覆盖「1+1」 | 「收到」✅ | 「收到」✅ | 平手 |
+
+**结论：默认用 0.5B。** 决定性差距在实验 3——这是演示「正确做法」的核心，1.5B 却把「巴黎的首都」答成「罗马」，反而误导；实验 1/2 也是 0.5B 更能体现「续写 / 幻觉」的本质。
+
+> 说明：贪心解码（`do_sample=False`）下结果可复现，同规模每次运行输出一致。更大的模型在这份「刻意简单」的教学 prompt 下未必更好，反而可能在关键实验上给出错误答案。
+
 ## 怎么读结果
 
 - **实验 1 → 2**：base 模型无论有没有假标签，本质都是续写。
@@ -233,4 +257,5 @@ Base 模型只学过「给定前文，预测下一个 token」。你写不写 `s
 ## 可选调整
 
 - **想更快、更省磁盘**：把脚本中的模型改为 `HuggingFaceTB/SmolLM2-360M` 系列（约 700MB），但 instruct 效果会弱一些。
+- **对比其它规模**：设置环境变量 `MODEL_SIZE`（如 `MODEL_SIZE=1.5`）即可切换 base / instruct 的规模，详见上文「规模对比：0.5B vs 1.5B」。
 - **想换问题**：修改脚本顶部的 `SYSTEM_PROMPT`、`USER_QUESTION`、`SYSTEM_PRIORITY_PROMPT`、`USER_PRIORITY_QUESTION` 常量即可。
